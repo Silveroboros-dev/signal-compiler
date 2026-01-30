@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Signal Compiler - Executive Agent Harness</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: #1e293b;
+      padding: 1rem 2rem;
+      border-bottom: 1px solid #334155;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .header .subtitle {
+      font-size: 0.875rem;
+      color: #94a3b8;
+    }
+
+    .cached-badge {
+      background: #854d0e;
+      color: #fef3c7;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      display: none;
+    }
+
+    .cached-badge.visible { display: inline-block; }
+
+    .container { padding: 2rem; max-width: 1600px; margin: 0 auto; }
+
+    /* Upload Section */
+    .upload-section {
+      text-align: center;
+      padding: 4rem 2rem;
+    }
+
+    .upload-section h2 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .upload-section p {
+      color: #94a3b8;
+      margin-bottom: 2rem;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .artifacts-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+
+    .artifact-tag {
+      background: #334155;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 0.875rem;
+    }
+
+    button {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+
+    button:hover { background: #2563eb; }
+    button:disabled { background: #475569; cursor: not-allowed; }
+
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 4rem 2rem;
+      display: none;
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid #334155;
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1.5rem;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading p { color: #94a3b8; }
+
+    /* Results Grid */
+    .results {
+      display: none;
+    }
+
+    .stats {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat {
+      background: #1e293b;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      text-transform: uppercase;
+    }
+
+    .stat.critical .stat-value { color: #ef4444; }
+    .stat.high .stat-value { color: #f97316; }
+    .stat.conflicts .stat-value { color: #eab308; }
+    .stat.drops .stat-value { color: #6b7280; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    .panel {
+      background: #1e293b;
+      border-radius: 12px;
+      padding: 1.5rem;
+      max-height: calc(100vh - 300px);
+      overflow-y: auto;
+    }
+
+    .panel h2 {
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      color: #94a3b8;
+      margin-bottom: 1rem;
+      position: sticky;
+      top: 0;
+      background: #1e293b;
+      padding-bottom: 0.5rem;
+    }
+
+    /* Signals */
+    .signal {
+      background: #334155;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      border-left: 4px solid transparent;
+    }
+
+    .signal:hover { background: #475569; }
+    .signal.critical { border-left-color: #ef4444; }
+    .signal.high { border-left-color: #f97316; }
+    .signal.medium { border-left-color: #eab308; }
+    .signal.low { border-left-color: #22c55e; }
+
+    .signal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .severity {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    .severity.critical { background: #7f1d1d; color: #fecaca; }
+    .severity.high { background: #7c2d12; color: #fed7aa; }
+    .severity.medium { background: #713f12; color: #fef08a; }
+    .severity.low { background: #14532d; color: #bbf7d0; }
+
+    .owner {
+      font-size: 0.75rem;
+      color: #94a3b8;
+    }
+
+    .summary {
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+
+    /* Conflicts */
+    .conflict {
+      background: #422006;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      border-left: 4px solid #f97316;
+    }
+
+    .conflict-topic {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .conflict-claims {
+      font-size: 0.875rem;
+    }
+
+    .conflict-claim {
+      margin: 0.25rem 0;
+      padding-left: 1rem;
+      border-left: 2px solid #f97316;
+    }
+
+    .conflict-claim .source {
+      color: #fdba74;
+      font-weight: 500;
+    }
+
+    /* Drops */
+    .drop {
+      background: #374151;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      opacity: 0.8;
+      border-left: 4px solid #6b7280;
+    }
+
+    .drop-reason {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #9ca3af;
+      margin-bottom: 0.25rem;
+    }
+
+    .drop-what {
+      font-size: 0.875rem;
+    }
+
+    /* Next Checks */
+    .check {
+      background: #1e3a5f;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      border-left: 4px solid #3b82f6;
+    }
+
+    .check-priority {
+      display: inline-block;
+      background: #3b82f6;
+      color: white;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 24px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+
+    .check-question {
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+
+    .check-meta {
+      font-size: 0.75rem;
+      color: #94a3b8;
+    }
+
+    /* Evidence Viewer */
+    .evidence-viewer {
+      position: fixed;
+      right: -450px;
+      top: 0;
+      width: 450px;
+      height: 100vh;
+      background: #1e293b;
+      box-shadow: -4px 0 20px rgba(0,0,0,0.3);
+      transition: right 0.3s ease;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .evidence-viewer.active { right: 0; }
+
+    .evidence-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid #334155;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .evidence-header h3 { font-size: 1rem; }
+
+    .close-btn {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      padding: 0.5rem;
+      font-size: 1.5rem;
+    }
+
+    .close-btn:hover { color: white; }
+
+    .evidence-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem;
+    }
+
+    .evidence-summary {
+      font-size: 1rem;
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+    }
+
+    .evidence-item {
+      margin-bottom: 1.5rem;
+    }
+
+    .evidence-source {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      margin-bottom: 0.5rem;
+    }
+
+    .evidence-quote {
+      background: #fef3c7;
+      color: #92400e;
+      padding: 1rem;
+      border-radius: 6px;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 0.875rem;
+      line-height: 1.6;
+      border-left: 4px solid #f59e0b;
+    }
+
+    .evidence-recommended {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #334155;
+    }
+
+    .evidence-recommended h4 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: #94a3b8;
+      margin-bottom: 0.5rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+      .grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 768px) {
+      .grid { grid-template-columns: 1fr; }
+      .stats { flex-wrap: wrap; }
+      .evidence-viewer { width: 100%; right: -100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>Signal Compiler</h1>
+      <span class="subtitle">Executive Agent Harness — Gemini 3</span>
+    </div>
+    <span id="cached-badge" class="cached-badge">CACHED RESULT</span>
+  </div>
+
+  <div class="container">
+    <!-- Upload Section -->
+    <div id="upload-section" class="upload-section">
+      <h2>Evidence-Backed Signals from Messy Documents</h2>
+      <p>
+        Executives don't lack information. They lack reliable telemetry.
+        Signal Compiler extracts evidence-backed signals, surfaces conflicts,
+        and explains what it can't verify.
+      </p>
+
+      <div class="artifacts-list">
+        <span class="artifact-tag">Weekly Pack PDF</span>
+        <span class="artifact-tag">Email Thread</span>
+        <span class="artifact-tag">Meeting Notes</span>
+        <span class="artifact-tag">QA Lab Report (scan)</span>
+        <span class="artifact-tag">Bank Statement (scan)</span>
+      </div>
+
+      <button onclick="compile()">Compile Signals</button>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+      <p>Analyzing documents with Gemini 3...</p>
+      <p style="font-size: 0.875rem; margin-top: 0.5rem;">Extracting signals, detecting conflicts, verifying evidence</p>
+    </div>
+
+    <!-- Results -->
+    <div id="results" class="results">
+      <div class="stats">
+        <div class="stat critical">
+          <div class="stat-value" id="critical-count">0</div>
+          <div class="stat-label">Critical</div>
+        </div>
+        <div class="stat high">
+          <div class="stat-value" id="high-count">0</div>
+          <div class="stat-label">High</div>
+        </div>
+        <div class="stat conflicts">
+          <div class="stat-value" id="conflict-count">0</div>
+          <div class="stat-label">Conflicts</div>
+        </div>
+        <div class="stat drops">
+          <div class="stat-value" id="drop-count">0</div>
+          <div class="stat-label">Dropped</div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="panel">
+          <h2>Signals (<span id="signal-count">0</span>)</h2>
+          <div id="signals"></div>
+        </div>
+
+        <div class="panel">
+          <h2>Conflicts & Drops</h2>
+          <div id="conflicts"></div>
+          <div id="drops" style="margin-top: 1rem;"></div>
+        </div>
+
+        <div class="panel">
+          <h2>Next Checks</h2>
+          <div id="next-checks"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Evidence Viewer -->
+  <div id="evidence-viewer" class="evidence-viewer">
+    <div class="evidence-header">
+      <h3>Evidence</h3>
+      <button class="close-btn" onclick="closeEvidence()">&times;</button>
+    </div>
+    <div id="evidence-content" class="evidence-content"></div>
+  </div>
+
+  <script>
+    let currentPack = null;
+
+    async function compile() {
+      document.getElementById('upload-section').style.display = 'none';
+      document.getElementById('loading').style.display = 'block';
+      document.getElementById('results').style.display = 'none';
+
+      try {
+        const response = await fetch('/compile', { method: 'POST' });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.detail || 'Compilation failed');
+        }
+
+        currentPack = await response.json();
+        renderResults(currentPack);
+      } catch (error) {
+        alert('Compilation failed: ' + error.message);
+        document.getElementById('upload-section').style.display = 'block';
+      } finally {
+        document.getElementById('loading').style.display = 'none';
+      }
+    }
+
+    function renderResults(pack) {
+      document.getElementById('results').style.display = 'block';
+
+      // Show cached badge if applicable
+      if (pack._cached) {
+        document.getElementById('cached-badge').classList.add('visible');
+      }
+
+      // Stats
+      const criticalCount = pack.signals.filter(s => s.severity === 'critical').length;
+      const highCount = pack.signals.filter(s => s.severity === 'high').length;
+
+      document.getElementById('critical-count').textContent = criticalCount;
+      document.getElementById('high-count').textContent = highCount;
+      document.getElementById('conflict-count').textContent = pack.conflicts.length;
+      document.getElementById('drop-count').textContent = pack.drops.length;
+      document.getElementById('signal-count').textContent = pack.signals.length;
+
+      // Sort signals by severity
+      const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+      const sortedSignals = [...pack.signals].sort((a, b) =>
+        severityOrder[a.severity] - severityOrder[b.severity]
+      );
+
+      // Signals
+      document.getElementById('signals').innerHTML = sortedSignals.map(s => `
+        <div class="signal ${s.severity}" onclick="showEvidence('${s.id}')">
+          <div class="signal-header">
+            <span class="severity ${s.severity}">${s.severity}</span>
+            <span class="owner">${s.owner}</span>
+          </div>
+          <div class="summary">${escapeHtml(s.summary)}</div>
+        </div>
+      `).join('');
+
+      // Conflicts
+      document.getElementById('conflicts').innerHTML = pack.conflicts.map(c => `
+        <div class="conflict">
+          <div class="conflict-topic">${escapeHtml(c.topic)}</div>
+          <div class="conflict-claims">
+            ${c.claims.map(cl => `
+              <div class="conflict-claim">
+                <span class="source">${escapeHtml(cl.source)}:</span> ${escapeHtml(cl.value)}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+
+      // Drops
+      document.getElementById('drops').innerHTML = pack.drops.map(d => `
+        <div class="drop">
+          <div class="drop-reason">${escapeHtml(d.reason)}</div>
+          <div class="drop-what">${escapeHtml(d.what)}</div>
+        </div>
+      `).join('');
+
+      // Next Checks
+      document.getElementById('next-checks').innerHTML = pack.next_checks.map(nc => `
+        <div class="check">
+          <span class="check-priority">${nc.priority}</span>
+          <div class="check-question">${escapeHtml(nc.question)}</div>
+          <div class="check-meta">${escapeHtml(nc.owner)} · Done when: ${escapeHtml(nc.done_when)}</div>
+        </div>
+      `).join('');
+    }
+
+    function showEvidence(signalId) {
+      const signal = currentPack.signals.find(s => s.id === signalId);
+      if (!signal) return;
+
+      const content = document.getElementById('evidence-content');
+      content.innerHTML = `
+        <div class="evidence-summary">${escapeHtml(signal.summary)}</div>
+
+        ${signal.evidence.map(e => `
+          <div class="evidence-item">
+            <div class="evidence-source">
+              ${escapeHtml(e.source)}${e.page ? ` (page ${e.page})` : ''}
+            </div>
+            <div class="evidence-quote">"${escapeHtml(e.quote)}"</div>
+          </div>
+        `).join('')}
+
+        <div class="evidence-recommended">
+          <h4>Recommended Check</h4>
+          <p>${escapeHtml(signal.recommended_check)}</p>
+        </div>
+      `;
+
+      document.getElementById('evidence-viewer').classList.add('active');
+    }
+
+    function closeEvidence() {
+      document.getElementById('evidence-viewer').classList.remove('active');
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Close evidence viewer on escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeEvidence();
+    });
+  </script>
+</body>
+</html>
