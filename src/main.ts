@@ -330,7 +330,7 @@ async function liveCompile(packConfig: PackConfig): Promise<SignalPack & { _runP
   console.log(`[compile] Sending ${parts.length} parts to Gemini...`);
 
   const model = genAI.getGenerativeModel({
-    model: 'gemini-2.5-flash',  // Use stable model
+    model: 'gemini-3-flash-preview',
     generationConfig: {
       temperature: 0.1,
       responseMimeType: 'application/json',
@@ -359,7 +359,7 @@ async function liveCompile(packConfig: PackConfig): Promise<SignalPack & { _runP
     run_meta: {
       run_id: `${now}_${packConfig.id}`,
       pack_id: packConfig.id,
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3-flash-preview',
       config_hash: createHash('md5').update(SIGNAL_COMPILER_PROMPT).digest('hex').slice(0, 8),
       created_at: now
     },
