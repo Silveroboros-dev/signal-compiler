@@ -1,0 +1,49 @@
+{
+  "packs": [
+    {
+      "id": "agrinova_w04",
+      "name": "AgriNova W04 2026 (Original)",
+      "description": "Weekly executive pack with cash discrepancy, covenant risk, and logistics delays",
+      "files": [
+        { "doc_id": "weekly-pack", "filename": "demo-artifacts/Demo_Artifact_1_Weekly_Pack_AgriNova_W04_2026.pdf" },
+        { "doc_id": "email-thread", "filename": "demo-artifacts/Demo_Artifact_2_Email_Thread_AgriNova_Covenant_Quality_Dispute.pdf" },
+        { "doc_id": "meeting-notes", "filename": "demo-artifacts/Demo_Artifact_3_Meeting_Notes_AgriNova_Cash_Risk_2026-01-26.pdf" },
+        { "doc_id": "qa-report-scan", "filename": "demo-artifacts/Demo_Artifact_4_QA_Lab_Report_Scan.pdf" },
+        { "doc_id": "bank-statement-scan", "filename": "demo-artifacts/Demo_Artifact_5_Bank_Statement_Scan.pdf" }
+      ]
+    },
+    {
+      "id": "nordlake_compliance_w07",
+      "name": "Nordlake Bank Compliance W07 2026",
+      "description": "AML/KYC compliance pack with sanctions screening and committee notes",
+      "files": [
+        { "doc_id": "weekly-dashboard", "filename": "Pack1_Compliance_W07_2026_NordlakeBank_Weekly_Compliance_Dashboard.pdf" },
+        { "doc_id": "email-thread", "filename": "Pack1_Compliance_W07_2026_NordlakeBank_Email_Thread_KYC_Sanctions.pdf" },
+        { "doc_id": "meeting-notes", "filename": "Pack1_Compliance_W07_2026_NordlakeBank_Meeting_Notes_Compliance_Committee.pdf" },
+        { "doc_id": "sanctions-scan", "filename": "Pack1_Compliance_W07_2026_NordlakeBank_Sanctions_Screening_Scan.pdf" }
+      ]
+    },
+    {
+      "id": "agrinova_cyber_incident",
+      "name": "AgriNova Cyber Incident 2026-02-11",
+      "description": "IT security incident with EDR alerts, Slack thread, and postmortem",
+      "files": [
+        { "doc_id": "incident-summary", "filename": "Pack2_CyberIncident_2026-02-11_AgriNova_Incident_Summary.pdf" },
+        { "doc_id": "slack-thread", "filename": "Pack2_CyberIncident_2026-02-11_AgriNova_Slack_Thread_Export.pdf" },
+        { "doc_id": "postmortem-notes", "filename": "Pack2_CyberIncident_2026-02-11_AgriNova_Postmortem_Notes.pdf" },
+        { "doc_id": "edr-alert-scan", "filename": "Pack2_CyberIncident_2026-02-11_AgriNova_EDR_Alert_Scan.pdf" }
+      ]
+    },
+    {
+      "id": "solaris_procurement_w12",
+      "name": "Solaris Manufacturing Procurement W12 2026",
+      "description": "Procurement pack with supplier negotiation and price escalation issues",
+      "files": [
+        { "doc_id": "weekly-pack", "filename": "Pack3_Procurement_W12_2026_SolarisMfg_Weekly_Procurement_Pack.pdf" },
+        { "doc_id": "email-thread", "filename": "Pack3_Procurement_W12_2026_SolarisMfg_Email_Thread_Price_Escalation.pdf" },
+        { "doc_id": "meeting-notes", "filename": "Pack3_Procurement_W12_2026_SolarisMfg_Meeting_Notes_Supplier_Negotiation.pdf" },
+        { "doc_id": "invoice-scan", "filename": "Pack3_Procurement_W12_2026_SolarisMfg_Proforma_Invoice_Scan.pdf" }
+      ]
+    }
+  ]
+}

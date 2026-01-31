@@ -569,10 +569,7 @@
       <div class="pack-selector">
         <label for="pack-select">Select Document Pack:</label>
         <select id="pack-select" onchange="updatePackInfo()">
-          <option value="agrinova_w04">AgriNova W04 2026 (Original)</option>
-          <option value="nordlake_compliance_w07">Nordlake Bank Compliance W07</option>
-          <option value="agrinova_cyber_incident">AgriNova Cyber Incident</option>
-          <option value="solaris_procurement_w12">Solaris Manufacturing Procurement W12</option>
+          <option value="">Loading packs...</option>
         </select>
       </div>
 
@@ -655,20 +652,39 @@
     let currentPack = null;
     let currentPackId = 'agrinova_w04';
 
-    const PACK_INFO = {
-      'agrinova_w04': ['Weekly Pack', 'Email Thread', 'Meeting Notes', 'QA Report (scan)', 'Bank Statement (scan)'],
-      'nordlake_compliance_w07': ['Compliance Dashboard', 'KYC Email Thread', 'Committee Notes', 'Sanctions Scan'],
-      'agrinova_cyber_incident': ['Incident Summary', 'Slack Thread', 'Postmortem Notes', 'EDR Alert (scan)'],
-      'solaris_procurement_w12': ['Procurement Pack', 'Price Email', 'Negotiation Notes', 'Invoice (scan)']
-    };
+    let availablePacks = [];
+
+    // Load packs from API on startup
+    async function loadPacks() {
+      try {
+        const response = await fetch('/packs');
+        availablePacks = await response.json();
+
+        const select = document.getElementById('pack-select');
+        select.innerHTML = availablePacks.map(p =>
+          `<option value="${p.id}">${p.name} (${p.file_count} files)</option>`
+        ).join('');
+
+        if (availablePacks.length > 0) {
+          currentPackId = availablePacks[0].id;
+          updatePackInfo();
+        }
+      } catch (e) {
+        console.error('Failed to load packs:', e);
+      }
+    }
 
     function updatePackInfo() {
       currentPackId = document.getElementById('pack-select').value;
-      const artifacts = PACK_INFO[currentPackId] || [];
-      document.getElementById('artifacts-list').innerHTML = artifacts.map(a =>
-        `<span class="artifact-tag">${a}</span>`
-      ).join('');
+      const pack = availablePacks.find(p => p.id === currentPackId);
+      if (pack) {
+        document.getElementById('artifacts-list').innerHTML =
+          `<span class="artifact-tag">${pack.file_count} documents</span>`;
+      }
     }
+
+    // Load packs on page load
+    loadPacks();
 
     async function compile() {
       document.getElementById('upload-section').style.display = 'none';

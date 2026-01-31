@@ -17,56 +17,44 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 app.use(express.static(join(__dirname, '..', 'public')));
 app.use(express.json());
 
-// Pack configurations
+// Pack configurations - loaded from packs.json
 interface PackConfig {
   id: string;
   name: string;
+  description?: string;
   files: { doc_id: string; filename: string }[];
 }
 
-const PACKS: Record<string, PackConfig> = {
-  'agrinova_w04': {
-    id: 'agrinova_w04',
-    name: 'AgriNova W04 2026 (Original)',
-    files: [
-      { doc_id: 'weekly-pack', filename: 'Demo_Artifact_1_Weekly_Pack_AgriNova_W04_2026.pdf' },
-      { doc_id: 'email-thread', filename: 'Demo_Artifact_2_Email_Thread_AgriNova_Covenant_Quality_Dispute.pdf' },
-      { doc_id: 'meeting-notes', filename: 'Demo_Artifact_3_Meeting_Notes_AgriNova_Cash_Risk_2026-01-26.pdf' },
-      { doc_id: 'qa-report-scan', filename: 'Demo_Artifact_4_QA_Lab_Report_Scan.pdf' },
-      { doc_id: 'bank-statement-scan', filename: 'Demo_Artifact_5_Bank_Statement_Scan.pdf' },
-    ]
-  },
-  'nordlake_compliance_w07': {
-    id: 'nordlake_compliance_w07',
-    name: 'Nordlake Bank Compliance W07 2026',
-    files: [
-      { doc_id: 'weekly-dashboard', filename: 'Pack1_Compliance_W07_2026_NordlakeBank_Weekly_Compliance_Dashboard.pdf' },
-      { doc_id: 'email-thread', filename: 'Pack1_Compliance_W07_2026_NordlakeBank_Email_Thread_KYC_Sanctions.pdf' },
-      { doc_id: 'meeting-notes', filename: 'Pack1_Compliance_W07_2026_NordlakeBank_Meeting_Notes_Compliance_Committee.pdf' },
-      { doc_id: 'sanctions-scan', filename: 'Pack1_Compliance_W07_2026_NordlakeBank_Sanctions_Screening_Scan.pdf' },
-    ]
-  },
-  'agrinova_cyber_incident': {
-    id: 'agrinova_cyber_incident',
-    name: 'AgriNova Cyber Incident 2026-02-11',
-    files: [
-      { doc_id: 'incident-summary', filename: 'Pack2_CyberIncident_2026-02-11_AgriNova_Incident_Summary.pdf' },
-      { doc_id: 'slack-thread', filename: 'Pack2_CyberIncident_2026-02-11_AgriNova_Slack_Thread_Export.pdf' },
-      { doc_id: 'postmortem-notes', filename: 'Pack2_CyberIncident_2026-02-11_AgriNova_Postmortem_Notes.pdf' },
-      { doc_id: 'edr-alert-scan', filename: 'Pack2_CyberIncident_2026-02-11_AgriNova_EDR_Alert_Scan.pdf' },
-    ]
-  },
-  'solaris_procurement_w12': {
-    id: 'solaris_procurement_w12',
-    name: 'Solaris Manufacturing Procurement W12 2026',
-    files: [
-      { doc_id: 'weekly-pack', filename: 'Pack3_Procurement_W12_2026_SolarisMfg_Weekly_Procurement_Pack.pdf' },
-      { doc_id: 'email-thread', filename: 'Pack3_Procurement_W12_2026_SolarisMfg_Email_Thread_Price_Escalation.pdf' },
-      { doc_id: 'meeting-notes', filename: 'Pack3_Procurement_W12_2026_SolarisMfg_Meeting_Notes_Supplier_Negotiation.pdf' },
-      { doc_id: 'invoice-scan', filename: 'Pack3_Procurement_W12_2026_SolarisMfg_Proforma_Invoice_Scan.pdf' },
-    ]
+interface PacksManifest {
+  packs: PackConfig[];
+}
+
+// Load packs from JSON file
+function loadPacks(): Record<string, PackConfig> {
+  const packsPath = join(__dirname, '..', 'packs.json');
+
+  if (!existsSync(packsPath)) {
+    console.warn('[packs] packs.json not found, using empty config');
+    return {};
   }
-};
+
+  try {
+    const manifest: PacksManifest = JSON.parse(readFileSync(packsPath, 'utf-8'));
+    const packs: Record<string, PackConfig> = {};
+
+    for (const pack of manifest.packs) {
+      packs[pack.id] = pack;
+    }
+
+    console.log(`[packs] Loaded ${manifest.packs.length} packs from packs.json`);
+    return packs;
+  } catch (e) {
+    console.error('[packs] Failed to load packs.json:', e);
+    return {};
+  }
+}
+
+const PACKS = loadPacks();
 
 // Run Evidence Pack schema
 interface RunEvidencePack {
@@ -301,18 +289,14 @@ async function compileSignals(packConfig: PackConfig): Promise<SignalPack> {
 
 async function liveCompile(packConfig: PackConfig): Promise<SignalPack & { _runPack: RunEvidencePack }> {
   const projectRoot = join(__dirname, '..');
-  const artifactsDir = join(projectRoot, 'demo-artifacts');
 
   // Build inputs metadata
   const inputs: RunEvidencePack['inputs'] = [];
   const parts: any[] = [{ text: SIGNAL_COMPILER_PROMPT }];
 
   for (const file of packConfig.files) {
-    // Try multiple locations
-    let filePath = join(projectRoot, file.filename);
-    if (!existsSync(filePath)) {
-      filePath = join(artifactsDir, file.filename);
-    }
+    // Path is relative to project root (as defined in packs.json)
+    const filePath = join(projectRoot, file.filename);
 
     if (!existsSync(filePath)) {
       console.warn(`[compile] File not found: ${file.filename}`);
