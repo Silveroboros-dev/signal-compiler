@@ -11,6 +11,12 @@ dist/
 
 # Cached results (generated at runtime)
 cached-result.json
+runs/
+
+# Test packs (add later if needed)
+Pack1_*.pdf
+Pack2_*.pdf
+Pack3_*.pdf
 
 # IDE
 .vscode/

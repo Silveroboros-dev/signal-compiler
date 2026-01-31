@@ -96,6 +96,64 @@
     button:hover { background: #2563eb; }
     button:disabled { background: #475569; cursor: not-allowed; }
 
+    .pack-selector {
+      margin-bottom: 1.5rem;
+    }
+
+    .pack-selector label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #94a3b8;
+      font-size: 0.875rem;
+    }
+
+    .pack-selector select {
+      background: #334155;
+      color: #e2e8f0;
+      border: 1px solid #475569;
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      font-size: 1rem;
+      min-width: 300px;
+      cursor: pointer;
+    }
+
+    .pack-selector select:hover {
+      border-color: #3b82f6;
+    }
+
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .export-buttons {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .export-btn {
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      background: #22c55e;
+    }
+
+    .export-btn:hover {
+      background: #16a34a;
+    }
+
+    .export-btn.secondary {
+      background: #475569;
+    }
+
+    .export-btn.secondary:hover {
+      background: #64748b;
+    }
+
     /* Loading */
     .loading {
       text-align: center;
@@ -223,6 +281,24 @@
       line-height: 1.5;
     }
 
+    .severity-reason {
+      margin-top: 0.25rem;
+      font-size: 0.7rem;
+      color: #94a3b8;
+      font-style: italic;
+    }
+
+    .blocker-tag {
+      margin-top: 0.5rem;
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: #fecaca;
+      background: #7f1d1d;
+      padding: 0.2rem 0.5rem;
+      border-radius: 3px;
+      display: inline-block;
+    }
+
     /* Conflicts */
     .conflict {
       background: #422006;
@@ -235,6 +311,43 @@
     .conflict-topic {
       font-weight: 600;
       margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .conflict-flag {
+      font-size: 0.6rem;
+      font-weight: 600;
+      padding: 0.15rem 0.4rem;
+      border-radius: 3px;
+      text-transform: uppercase;
+    }
+
+    .conflict-flag.blocker {
+      background: #7f1d1d;
+      color: #fecaca;
+    }
+
+    .conflict-flag.value_date_mismatch {
+      background: #78350f;
+      color: #fef3c7;
+    }
+
+    .conflict-flag.definition_unknown {
+      background: #374151;
+      color: #d1d5db;
+    }
+
+    .conflict-type {
+      font-size: 0.6rem;
+      font-weight: 500;
+      background: #422006;
+      color: #fdba74;
+      padding: 0.15rem 0.4rem;
+      border-radius: 3px;
+      font-family: monospace;
     }
 
     .conflict-claims {
@@ -301,9 +414,41 @@
       margin-bottom: 0.5rem;
     }
 
+    .check-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .check-template {
+      font-size: 0.65rem;
+      font-weight: 500;
+      background: #1e3a5f;
+      color: #93c5fd;
+      padding: 0.15rem 0.4rem;
+      border-radius: 3px;
+      font-family: monospace;
+    }
+
     .check-meta {
       font-size: 0.75rem;
       color: #94a3b8;
+    }
+
+    .check-slots {
+      margin-top: 0.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+    }
+
+    .slot {
+      font-size: 0.65rem;
+      background: #334155;
+      padding: 0.15rem 0.4rem;
+      border-radius: 3px;
+      font-family: monospace;
     }
 
     /* Evidence Viewer */
@@ -421,7 +566,17 @@
         and explains what it can't verify.
       </p>
 
-      <div class="artifacts-list">
+      <div class="pack-selector">
+        <label for="pack-select">Select Document Pack:</label>
+        <select id="pack-select" onchange="updatePackInfo()">
+          <option value="agrinova_w04">AgriNova W04 2026 (Original)</option>
+          <option value="nordlake_compliance_w07">Nordlake Bank Compliance W07</option>
+          <option value="agrinova_cyber_incident">AgriNova Cyber Incident</option>
+          <option value="solaris_procurement_w12">Solaris Manufacturing Procurement W12</option>
+        </select>
+      </div>
+
+      <div id="artifacts-list" class="artifacts-list">
         <span class="artifact-tag">Weekly Pack PDF</span>
         <span class="artifact-tag">Email Thread</span>
         <span class="artifact-tag">Meeting Notes</span>
@@ -441,22 +596,29 @@
 
     <!-- Results -->
     <div id="results" class="results">
-      <div class="stats">
-        <div class="stat critical">
-          <div class="stat-value" id="critical-count">0</div>
-          <div class="stat-label">Critical</div>
+      <div class="results-header">
+        <div class="stats">
+          <div class="stat critical">
+            <div class="stat-value" id="critical-count">0</div>
+            <div class="stat-label">Critical</div>
+          </div>
+          <div class="stat high">
+            <div class="stat-value" id="high-count">0</div>
+            <div class="stat-label">High</div>
+          </div>
+          <div class="stat conflicts">
+            <div class="stat-value" id="conflict-count">0</div>
+            <div class="stat-label">Conflicts</div>
+          </div>
+          <div class="stat drops">
+            <div class="stat-value" id="drop-count">0</div>
+            <div class="stat-label">Dropped</div>
+          </div>
         </div>
-        <div class="stat high">
-          <div class="stat-value" id="high-count">0</div>
-          <div class="stat-label">High</div>
-        </div>
-        <div class="stat conflicts">
-          <div class="stat-value" id="conflict-count">0</div>
-          <div class="stat-label">Conflicts</div>
-        </div>
-        <div class="stat drops">
-          <div class="stat-value" id="drop-count">0</div>
-          <div class="stat-label">Dropped</div>
+        <div class="export-buttons">
+          <button class="export-btn" onclick="exportJSON()">Export JSON</button>
+          <button class="export-btn" onclick="exportMarkdown()">Export MD</button>
+          <button class="export-btn secondary" onclick="resetView()">New Pack</button>
         </div>
       </div>
 
@@ -491,6 +653,22 @@
 
   <script>
     let currentPack = null;
+    let currentPackId = 'agrinova_w04';
+
+    const PACK_INFO = {
+      'agrinova_w04': ['Weekly Pack', 'Email Thread', 'Meeting Notes', 'QA Report (scan)', 'Bank Statement (scan)'],
+      'nordlake_compliance_w07': ['Compliance Dashboard', 'KYC Email Thread', 'Committee Notes', 'Sanctions Scan'],
+      'agrinova_cyber_incident': ['Incident Summary', 'Slack Thread', 'Postmortem Notes', 'EDR Alert (scan)'],
+      'solaris_procurement_w12': ['Procurement Pack', 'Price Email', 'Negotiation Notes', 'Invoice (scan)']
+    };
+
+    function updatePackInfo() {
+      currentPackId = document.getElementById('pack-select').value;
+      const artifacts = PACK_INFO[currentPackId] || [];
+      document.getElementById('artifacts-list').innerHTML = artifacts.map(a =>
+        `<span class="artifact-tag">${a}</span>`
+      ).join('');
+    }
 
     async function compile() {
       document.getElementById('upload-section').style.display = 'none';
@@ -498,7 +676,7 @@
       document.getElementById('results').style.display = 'none';
 
       try {
-        const response = await fetch('/compile', { method: 'POST' });
+        const response = await fetch(`/compile/${currentPackId}`, { method: 'POST' });
 
         if (!response.ok) {
           const error = await response.json();
@@ -513,6 +691,21 @@
       } finally {
         document.getElementById('loading').style.display = 'none';
       }
+    }
+
+    function exportJSON() {
+      window.open(`/export/${currentPackId}`, '_blank');
+    }
+
+    function exportMarkdown() {
+      window.open(`/export/${currentPackId}/md`, '_blank');
+    }
+
+    function resetView() {
+      document.getElementById('results').style.display = 'none';
+      document.getElementById('upload-section').style.display = 'block';
+      document.getElementById('cached-badge').classList.remove('visible');
+      currentPack = null;
     }
 
     function renderResults(pack) {
@@ -547,19 +740,30 @@
             <span class="owner">${s.owner}</span>
           </div>
           <div class="summary">${escapeHtml(s.summary)}</div>
+          ${s.severity_reason ? `<div class="severity-reason">${escapeHtml(s.severity_reason)}</div>` : ''}
+          ${s.blocker_for && s.blocker_for.length ? `<div class="blocker-tag">BLOCKS: ${s.blocker_for.join(', ')}</div>` : ''}
         </div>
       `).join('');
 
       // Conflicts
       document.getElementById('conflicts').innerHTML = pack.conflicts.map(c => `
         <div class="conflict">
-          <div class="conflict-topic">${escapeHtml(c.topic)}</div>
+          <div class="conflict-topic">
+            ${escapeHtml(c.topic)}
+            ${c.type ? `<span class="conflict-type">${escapeHtml(c.type)}</span>` : ''}
+            ${c.flags && c.flags.length ? c.flags.map(f => `<span class="conflict-flag ${f.toLowerCase()}">${f}</span>`).join('') : ''}
+          </div>
           <div class="conflict-claims">
             ${c.claims.map(cl => `
               <div class="conflict-claim">
-                <span class="source">${escapeHtml(cl.source)}:</span> ${escapeHtml(cl.value)}
+                <span class="source">${escapeHtml(cl.source)}${cl.page ? ` p.${cl.page}` : ''}:</span>
+                <strong>${escapeHtml(cl.value)}</strong>
+                ${cl.definition ? `<span style="color:#94a3b8;font-size:0.75rem;"> (${escapeHtml(cl.definition)}${cl.value_date ? `, ${cl.value_date}` : ''})</span>` : ''}
               </div>
             `).join('')}
+          </div>
+          <div style="margin-top:0.5rem;font-size:0.75rem;color:#94a3b8;">
+            <strong>Resolve:</strong> ${escapeHtml(c.how_to_resolve)}
           </div>
         </div>
       `).join('');
@@ -575,9 +779,13 @@
       // Next Checks
       document.getElementById('next-checks').innerHTML = pack.next_checks.map(nc => `
         <div class="check">
-          <span class="check-priority">${nc.priority}</span>
+          <div class="check-header">
+            <span class="check-priority">${nc.priority}</span>
+            ${nc.template ? `<span class="check-template">${escapeHtml(nc.template)}</span>` : ''}
+          </div>
           <div class="check-question">${escapeHtml(nc.question)}</div>
           <div class="check-meta">${escapeHtml(nc.owner)} · Done when: ${escapeHtml(nc.done_when)}</div>
+          ${nc.slots ? `<div class="check-slots">${Object.entries(nc.slots).map(([k,v]) => `<span class="slot">${k}: ${typeof v === 'object' ? JSON.stringify(v) : v}</span>`).join('')}</div>` : ''}
         </div>
       `).join('');
     }
@@ -593,7 +801,7 @@
         ${signal.evidence.map(e => `
           <div class="evidence-item">
             <div class="evidence-source">
-              ${escapeHtml(e.source)}${e.page ? ` (page ${e.page})` : ''}
+              ${escapeHtml(e.source)}${e.page ? ` · Page ${e.page}` : ''}${e.line ? ` · Line ${e.line}` : ''}${e.bbox ? ` · Region [${e.bbox.join(', ')}]` : ''}
             </div>
             <div class="evidence-quote">"${escapeHtml(e.quote)}"</div>
           </div>
