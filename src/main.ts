@@ -454,7 +454,7 @@ app.listen(PORT, () => {
   console.log(`
 ╔════════════════════════════════════════════════════════════╗
 ║  Signal Compiler - Executive Agent Harness                 ║
-║  Running at http://localhost:${PORT}                           ║
+║  Running at http://localhost:${PORT}                       ║
 ║                                                            ║
 ║  GET  /packs              - List available packs           ║
 ║  POST /compile/:packId    - Compile signals from pack      ║
